@@ -4,6 +4,8 @@ engine.cfg
 .import/
 default_env.tres
 icon.png.import
+*.apk
+*.exe
 # Ignore or not ignore, thats the question?
 # project.godot
 

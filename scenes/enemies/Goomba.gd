@@ -1,7 +1,7 @@
 tool
 extends "res://scripts/state_machine.gd"
 
-const State = preload("res://scripts/state_machine.gd").State
+#const State = preload("res://scripts/state_machine.gd").State
 
 # This should  be an enum but godot is not
 # allowing negative numbers
@@ -21,90 +21,90 @@ onready var walk_state = Walk.new(self)
 onready var die_state = Die.new(self)
 
 func _set_trigger_distance(new):
-    trigger_distance = new
-    if self.has_node("Trigger"):
-        $Trigger/CollisionShape2D.shape.extents = Vector2(trigger_distance, trigger_distance)
+	trigger_distance = new
+	if self.has_node("Trigger"):
+		$Trigger/CollisionShape2D.shape.extents = Vector2(trigger_distance, trigger_distance)
 
 func _ready():
-    $Trigger/CollisionShape2D.shape.extents = Vector2(trigger_distance, trigger_distance)
-    self.change_state(self.idle_state)
+	$Trigger/CollisionShape2D.shape.extents = Vector2(trigger_distance, trigger_distance)
+	self.change_state(self.idle_state)
 
 
 func hitted(normal):
-    if not Engine.is_editor_hint():
-        self.change_state(self.die_state)
-        return self.stomp_kickback * 64
+	if not Engine.is_editor_hint():
+		self.change_state(self.die_state)
+		return self.stomp_kickback * 64
 
 
 func _on_Trigger_body_entered(body):
-    if not Engine.is_editor_hint():
-        if body.get_parent().is_in_group("player"):
-            self.change_state(self.walk_state)
+	if not Engine.is_editor_hint():
+		if body.get_parent().is_in_group("player"):
+			self.change_state(self.walk_state)
 
 
 # TODO: Replace this with an exit collider :D
 # func _on_VisibilityNotifier2D_screen_exited():
-    # Only kill this element if is moving left
-    # if self.direction == -1:
-    #     self.change_state(self.idle_state)
-    #     self.queue_free()
+	# Only kill this element if is moving left
+	# if self.direction == -1:
+	#     self.change_state(self.idle_state)
+	#     self.queue_free()
 
 # func _on_VisibilityNotifier2D_viewport_exited(viewport):
 #     print("End?? %s" % viewport.get_visible_rect().end)
 #     print("Position?? %s" % viewport.get_visible_rect().position)
 
 
-class Idle extends State:
+class Idle extends StateMachine.State:
 
-    func _init(parent).(parent):
-        self.name = "Idle"
+	func _init(parent).(parent):
+		self.name = "Idle"
 
-    func on_enter(previous):
-        self.parent.animation_player.current_animation = "Idle"
-
-
-class Walk extends State:
-
-    func _init(parent).(parent):
-        self.name = "Walk"
-
-    func on_enter(previous):
-        self.parent.animation_player.play()
-        self.parent.animation_player.current_animation = "Walk"
+	func on_enter(previous):
+		self.parent.animation_player.current_animation = "Idle"
 
 
-    func physics_step(delta):
-        var movement = self.parent.walk_speed
-        movement.x *= self.parent.direction
-        self.parent.body.move_and_slide(movement)
-        var count = self.parent.body.get_slide_count()
-        for i in range(count):
-            var collision = self.parent.body.get_slide_collision(i)
-            var object = collision.collider.get_parent()
+class Walk extends StateMachine.State:
 
-            if object.is_in_group("player") and collision.normal != DOWN_NORMAL:
-                object.die()
-                return self.parent.change_state(self.parent.idle_state)
+	func _init(parent).(parent):
+		self.name = "Walk"
 
-            if collision.normal == LEFT_NORMAL or collision.normal == RIGHT_NORMAL:
-                self.parent.direction *= -1
+	func on_enter(previous):
+		self.parent.animation_player.play()
+		self.parent.animation_player.current_animation = "Walk"
 
 
-class Die extends State:
+	func physics_step(delta):
+		var movement = self.parent.walk_speed
+		movement.x *= self.parent.direction
+		self.parent.body.move_and_slide(movement)
+		var count = self.parent.body.get_slide_count()
+		for i in range(count):
+			var collision = self.parent.body.get_slide_collision(i)
+			var object = collision.collider.get_parent()
 
-    var time = 0
+			if object.is_in_group("player") and collision.normal != StateMachine.DOWN_NORMAL:
+				object.die()
+				return self.parent.change_state(self.parent.idle_state)
 
-    func _init(parent).(parent):
-        self.name = "Die"
-
-    func on_enter(previous):
-        self.parent.collider_animation.current_animation = "Die"
-        self.parent.collider_animation.play()
-        self.parent.animation_player.current_animation = "Die"
+			if collision.normal == StateMachine.LEFT_NORMAL or collision.normal == StateMachine.RIGHT_NORMAL:
+				self.parent.direction *= -1
 
 
-    func physics_step(delta):
-        time += delta
-        if (time > self.parent.animation_player.current_animation_length):
-            self.parent.change_state(self.parent.idle_state)
-            self.parent.queue_free()
+class Die extends StateMachine.State:
+
+	var time = 0
+
+	func _init(parent).(parent):
+		self.name = "Die"
+
+	func on_enter(previous):
+		self.parent.collider_animation.current_animation = "Die"
+		self.parent.collider_animation.play()
+		self.parent.animation_player.current_animation = "Die"
+
+
+	func physics_step(delta):
+		time += delta
+		if (time > self.parent.animation_player.current_animation_length):
+			self.parent.change_state(self.parent.idle_state)
+			self.parent.queue_free()

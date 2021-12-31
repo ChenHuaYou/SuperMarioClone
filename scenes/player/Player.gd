@@ -1,8 +1,10 @@
-extends "res://scripts/state_machine.gd"
+#extends "res://scripts/state_machine.gd"
+extends StateMachine
 
 signal died
 
-#const State = preload("res://scripts/state_machine.gd").StartScreenState
+#const _State = preload("res://scripts/state_machine.gd").State
+
 
 export (bool) var debug = false
 
@@ -142,7 +144,7 @@ func _process(delta):
 
 ##### States
 
-class Idle extends State:
+class Idle extends StateMachine.State:
 
 	func _init(parent).(parent):
 		self.name = "Idle"
@@ -159,7 +161,7 @@ class Idle extends State:
 		var velocity = self.parent.get_input_velocity()
 		velocity.y = self.parent.calculate_y_velocity(delta)
 
-		self.parent.body.move_and_slide(velocity, UP_NORMAL)
+		self.parent.body.move_and_slide(velocity, StateMachine.UP_NORMAL)
 
 		if velocity.x != 0:
 			self.parent.change_state(self.parent.walk_state)
@@ -170,7 +172,7 @@ class Idle extends State:
 			return self.parent.change_state(self.parent.fall_state)
 
 
-class Move extends State:
+class Move extends StateMachine.State:
 
 	var last_direction = 1
 	var new_direction = 0.0
@@ -276,7 +278,7 @@ class Move extends State:
 				return
 
 		self.parent.sprite.flip_h = input_velocity.x < 0
-		self.parent.body.move_and_slide(input_velocity, UP_NORMAL)
+		self.parent.body.move_and_slide(input_velocity, StateMachine.UP_NORMAL)
 		self.parent.velocity = input_velocity
 
 		if input_velocity.x == 0 and !self.change_direction:
@@ -303,7 +305,7 @@ class Move extends State:
 		)
 
 
-class Jump extends State:
+class Jump extends StateMachine.State:
 
 	var velocity = Vector2()
 
@@ -394,7 +396,7 @@ class Jump extends State:
 			var object = collision.collider.get_parent()
 
 			if object.is_in_group("bricks"):
-				if collision.normal == DOWN_NORMAL:
+				if collision.normal == StateMachine.DOWN_NORMAL:
 					object.hitted(collision.normal)
 
 					# Make this hit the highest point in the jump, so the player start
@@ -404,7 +406,7 @@ class Jump extends State:
 					self.parent.slide_reminder(self.parent.body, collision)
 
 			elif object.is_in_group("enemies"):
-				if collision.normal == UP_NORMAL:
+				if collision.normal == StateMachine.UP_NORMAL:
 					var kickback = object.hitted(collision.normal)
 
 					if kickback:
@@ -420,7 +422,7 @@ class Jump extends State:
 				self.parent.slide_reminder(self.parent.body, collision)
 
 
-class Fall extends State:
+class Fall extends StateMachine.State:
 
 	var velocity = Vector2()
 	var x_move_time = 0.5
@@ -445,20 +447,20 @@ class Fall extends State:
 		var x_movement_allowed = max(self.x_move_time / self.x_move_threshold, 0)
 		# velocity.x *= x_movement_allowed
 		velocity.x = self.parent.velocity.x * x_movement_allowed
-		self.parent.body.move_and_slide(velocity, UP_NORMAL)
+		self.parent.body.move_and_slide(velocity, StateMachine.UP_NORMAL)
 
 		if self.parent.is_grounded():
 			self.parent.change_state(self.parent.idle_state)
 
 
 
-class CinematicCut extends State:
+class CinematicCut extends StateMachine.State:
 
 	func _init(parent).(parent):
 		self.name = "CinematicCut"
 
 
-class Dead extends State:
+class Dead extends StateMachine.State:
 
 	var time = 0
 	var emitted = false

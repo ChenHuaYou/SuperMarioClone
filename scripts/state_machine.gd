@@ -1,5 +1,7 @@
 extends Node2D
 
+class_name StateMachine
+
 const UP_NORMAL = Vector2(0,-1)
 const DOWN_NORMAL = Vector2(0,1)
 const LEFT_NORMAL = Vector2(-1,0)
@@ -38,6 +40,7 @@ func slide_reminder(body, collision):
 	var n = collision.normal
 	var nm = r.slide(n)
 	body.move_and_collide(nm)
+	
 
 class State:
 	var name = "Base State"
